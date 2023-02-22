@@ -19,6 +19,8 @@ ingress:
                   number: 8200
             path: /
             pathType: ImplementationSpecific
+  tls:
+    enabled: true
 
 istio:
   enabled: false
