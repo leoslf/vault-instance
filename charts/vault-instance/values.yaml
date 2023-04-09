@@ -1,26 +1,78 @@
 bankVaultsImage: ghcr.io/banzaicloud/bank-vaults:1.15.3
 
+tls:
+  enabled: true
+
 existingTlsSecretName: ""
 
 image: vault:1.10.3
+
+# Common annotations for all created resources
+annotations:
+  common/annotation: "true"
+
+# Vault Pods , Services and TLS Secret annotations
+vaultAnnotations:
+  type/instance: "vault"
+
+# Vault Configurer Pods and Services annotations
+vaultConfigurerAnnotations:
+  type/instance: "vaultconfigurer"
+
+# Vault Pods, Services and TLS Secret labels
+vaultLabels:
+  example.com/log-format: "json"
+
+# Vault Configurer Pods and Services labels
+vaultConfigurerLabels:
+  example.com/log-format: "string"
+
+# Support for nodeAffinity Rules
+# nodeAffinity:
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     nodeSelectorTerms:
+#     - matchExpressions:
+#       - key : "node-role.kubernetes.io/your_role"
+#         operator: In
+#         values: ["true"]
+
+
+# Support for pod nodeSelector rules to control which nodes can be chosen to run
+# the given pods
+# nodeSelector:
+#   "node-role.kubernetes.io/your_role": "true"
+
+# Support for node tolerations that work together with node taints to control
+# the pods that can like on a node
+# tolerations:
+# - effect: NoSchedule
+#   key: node-role.kubernetes.io/your_role
+#   operator: Equal
+#   value: "true"
+
+# Specify the ServiceAccount where the Vault Pod and the Bank-Vaults configurer/unsealer is running
+serviceAccount: vault
+
+# Specify the Service's type where the Vault Service is exposed
+# Please note that some Ingress controllers like https://github.com/kubernetes/ingress-gce
+# forces you to expose your Service on a NodePort
+serviceType: ClusterIP
 
 ingress:
   enabled: true
   annotations: {}
   spec:
     rules:
-      - host: vault.does.not.exist
-        http:
-          paths:
-          - backend:
-              service:
-                name: vault
-                port:
-                  number: 8200
-            path: /
-            pathType: ImplementationSpecific
-  tls:
-    enabled: true
+    - host: vault.does.not.exist
+      http:
+        paths:
+        - backend:
+            service:
+              name: vault
+              port:
+                number: 8200
+          path: /
+          pathType: ImplementationSpecific
 
 istio:
   enabled: false
@@ -37,3 +89,25 @@ pvc:
 
 # example "default"
 customAuthRole: ""
+
+# Allows writing some secrets to Vault (useful for development purposes).
+# See https://www.vaultproject.io/docs/secrets/kv/index.html for more information.
+startupSecrets:
+  - type: kv
+    path: secret/data/accounts/aws
+    data:
+      data:
+        AWS_ACCESS_KEY_ID: secretId
+        AWS_SECRET_ACCESS_KEY: s3cr3t
+  - type: kv
+    path: secret/data/dockerrepo
+    data:
+      data:
+        DOCKER_REPO_USER: dockerrepouser
+        DOCKER_REPO_PASSWORD: dockerrepopassword
+  - type: kv
+    path: secret/data/mysql
+    data:
+      data:
+        MYSQL_ROOT_PASSWORD: s3cr3t
+        MYSQL_PASSWORD: 3xtr3ms3cr3t

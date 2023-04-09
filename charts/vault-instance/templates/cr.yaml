@@ -7,61 +7,69 @@ spec:
   image: {{ .Values.image }}
   bankVaultsImage: {{ .Values.bankVaultsImage }}
 
+{{- with .Values.annotations }}
   # Common annotations for all created resources
   annotations:
-    common/annotation: "true"
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
+{{- with .Values.vaultAnnotations }}
   # Vault Pods , Services and TLS Secret annotations
   vaultAnnotations:
-    type/instance: "vault"
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
+{{- with .Values.vaultConfigurerAnnotations }}
   # Vault Configurer Pods and Services annotations
   vaultConfigurerAnnotations:
-    type/instance: "vaultconfigurer"
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
-  # Vault Pods , Services and TLS Secret labels
+{{- with .Values.vaultLabels }}
+  # Vault Pods, Services and TLS Secret labels
   vaultLabels:
-    example.com/log-format: "json"
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
+{{- with .Values.vaultConfigurerLabels }}
   # Vault Configurer Pods and Services labels
   vaultConfigurerLabels:
-    example.com/log-format: "string"
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
+{{- with .Values.nodeAffinity }}
   # Support for nodeAffinity Rules
-  # nodeAffinity:
-  #   requiredDuringSchedulingIgnoredDuringExecution:
-  #     nodeSelectorTerms:
-  #     - matchExpressions:
-  #       - key : "node-role.kubernetes.io/your_role"
-  #         operator: In
-  #         values: ["true"]
+  nodeAffinity:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
+{{- with .Values.nodeSelector }}
   # Support for pod nodeSelector rules to control which nodes can be chosen to run
   # the given pods
-  # nodeSelector:
-  #   "node-role.kubernetes.io/your_role": "true"
+  nodeSelector:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
+{{- with .Values.tolerations }}
   # Support for node tolerations that work together with node taints to control
   # the pods that can like on a node
-  # tolerations:
-  # - effect: NoSchedule
-  #   key: node-role.kubernetes.io/your_role
-  #   operator: Equal
-  #   value: "true"
+  tolerations:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 
   # Specify the ServiceAccount where the Vault Pod and the Bank-Vaults configurer/unsealer is running
-  serviceAccount: vault
+  serviceAccount: {{ .Values.serviceAccount }}
 
   # Specify the Service's type where the Vault Service is exposed
   # Please note that some Ingress controllers like https://github.com/kubernetes/ingress-gce
   # forces you to expose your Service on a NodePort
-  serviceType: ClusterIP
+  serviceType: {{ .Values.serviceType }}
 
   # Specify existing secret contains TLS certificate (accepted secret type: kubernetes.io/tls)
   # If it is set, generating certificate will be disabled
   # existingTlsSecretName: selfsigned-cert-tls
-{{- if .Values.existingTlsSecretName }}
-  existingTlsSecretName: '{{ .Values.existingTlsSecretName }}'
+{{- with .Values.existingTlsSecretName }}
+  existingTlsSecretName: '{{ . }}'
 {{- end }}
 
 {{- if .Values.ingress.enabled }}
@@ -71,16 +79,17 @@ spec:
     # the operator will add NGINX, Traefik and HAProxy Ingress compatible annotations
     # to support TLS backends
     annotations:
+    {{- if .Values.ingress.annotations }}
+      {{- toYaml .Values.ingress.annotations | nindent 6 }}
+    {{- end }}
+
     # Override the default Ingress specification here
     # This follows the same format as the standard Kubernetes Ingress
     # See: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#ingressspec-v1beta1-extensions
-{{- if .Values.ingress.annotations }}
-{{ toYaml .Values.ingress.annotations | indent 6 }}
-{{- end }}
     spec:
-{{- if .Values.ingress.spec }}
-{{ toYaml .Values.ingress.spec | indent 6 }}
-{{- end }}
+    {{- if .Values.ingress.spec }}
+      {{- toYaml .Values.ingress.spec | nindent 6 }}
+    {{- end }}
 {{- end }}
 
   # Use local disk to store Vault file data, see config section.
@@ -116,12 +125,12 @@ spec:
     listener:
       tcp:
         address: "0.0.0.0:8200"
-				{{- if .Values.ingress.tls.enabled }}
+      {{- if .Values.tls.enabled }}
         tls_cert_file: /vault/tls/server.crt
         tls_key_file: /vault/tls/server.key
-				{{- else }}
+      {{- else }}
         tls_disable: true
-				{{- end }}
+      {{- end }}
     telemetry:
       statsd_address: localhost:9125
     ui: true
@@ -130,12 +139,14 @@ spec:
   externalConfig:
     policies:
       - name: allow_secrets
-        rules: path "secret/*" {
-          capabilities = ["create", "read", "update", "delete", "list"]
+        rules: |-
+          path "secret/*" {
+            capabilities = ["create", "read", "update", "delete", "list"]
           }
       - name: allow_pki
-        rules: path "pki/*" {
-          capabilities = ["create", "read", "update", "delete", "list"]
+        rules: |-
+          path "pki/*" {
+            capabilities = ["create", "read", "update", "delete", "list"]
           }
     auth:
     - roles:
@@ -168,8 +179,9 @@ spec:
         max_lease_ttl: 720h
       configuration:
         config:
-        - crl_distribution_points: https://vault.{{ .Release.Namespace }}:8200/v1/pki/crl
-          issuing_certificates: https://vault.{{ .Release.Namespace }}:8200/v1/pki/ca
+        {{- $scheme := .Values.tls.enabled | ternary "https" "http" }}
+        - crl_distribution_points: {{ $scheme }}://vault.{{ .Release.Namespace }}:8200/v1/pki/crl
+          issuing_certificates: {{ $scheme }}://vault.{{ .Release.Namespace }}:8200/v1/pki/ca
           name: urls
         roles:
         - allow_subdomains: true
@@ -183,27 +195,12 @@ spec:
       description: Vault PKI Backend
       type: pki
 
+  {{- with .Values.startupSecrets }}
     # Allows writing some secrets to Vault (useful for development purposes).
     # See https://www.vaultproject.io/docs/secrets/kv/index.html for more information.
     startupSecrets:
-      - type: kv
-        path: secret/data/accounts/aws
-        data:
-          data:
-            AWS_ACCESS_KEY_ID: secretId
-            AWS_SECRET_ACCESS_KEY: s3cr3t
-      - type: kv
-        path: secret/data/dockerrepo
-        data:
-          data:
-            DOCKER_REPO_USER: dockerrepouser
-            DOCKER_REPO_PASSWORD: dockerrepopassword
-      - type: kv
-        path: secret/data/mysql
-        data:
-          data:
-            MYSQL_ROOT_PASSWORD: s3cr3t
-            MYSQL_PASSWORD: 3xtr3ms3cr3t
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
 
   vaultEnvsConfig:
     - name: VAULT_LOG_LEVEL
