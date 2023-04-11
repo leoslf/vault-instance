@@ -13,6 +13,11 @@ spec:
     {{- toYaml . | nindent 4 }}
 {{- end }}
 
+{{- with .Values.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+
 {{- with .Values.vaultAnnotations }}
   # Vault Pods , Services and TLS Secret annotations
   vaultAnnotations:
@@ -22,6 +27,12 @@ spec:
 {{- with .Values.vaultConfigurerAnnotations }}
   # Vault Configurer Pods and Services annotations
   vaultConfigurerAnnotations:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+
+{{- with .Values.vaultContainerSpec }}
+  vaultContainerSpec:
+    name: vault
     {{- toYaml . | nindent 4 }}
 {{- end }}
 
