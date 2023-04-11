@@ -32,30 +32,30 @@ spec:
 
   vaultContainerSpec:
     name: {{ .Values.vaultContainerSpec.name | default "vault" }}
-    livenessProbe:
-      httpGet:
-        scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
-        path: /v1/sys/init
-        port: vault
     {{- with .Values.vaultContainerSpec.livenessProbe }}
+    livenessProbe:
+      # httpGet:
+      #   scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
+      #   path: /v1/sys/init
+      #   port: vault
       {{- toYaml . | nindent 6 }}
     {{- end }}
-    readinessProbe:
-      httpGet:
-        scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
-        path: /v1/sys/health?standbyok=true&perfstandbyok=true&drsecondarycode=299
-        port: vault
     {{- with .Values.vaultContainerSpec.readinessProbe }}
+    readinessProbe:
+      # httpGet:
+      #   scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
+      #   path: /v1/sys/health?standbyok=true&perfstandbyok=true&drsecondarycode=299
+      #   port: vault
       {{- toYaml . | nindent 6 }}
     {{- end }}
-    startupProbe:
-      httpGet:
-        scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
-        path: /v1/sys/init
-        port: vault
-    {{- with .Values.vaultContainerSpec.startupProbe }}
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
+    # startupProbe:
+    #   httpGet:
+    #     scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
+    #     path: /v1/sys/init
+    #     port: vault
+    # {{- with .Values.vaultContainerSpec.startupProbe }}
+    #   {{- toYaml . | nindent 6 }}
+    # {{- end }}
 
 {{- with .Values.vaultLabels }}
   # Vault Pods, Services and TLS Secret labels
