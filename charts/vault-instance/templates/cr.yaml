@@ -35,7 +35,7 @@ spec:
     {{- with .Values.vaultContainerSpec.livenessProbe }}
     livenessProbe:
       # httpGet:
-      #   scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
+      #   scheme: {{ $.Values.tls.enabled | ternary "HTTPS" "HTTP" }}
       #   path: /v1/sys/init
       #   port: vault
       {{- toYaml . | nindent 6 }}
@@ -43,14 +43,14 @@ spec:
     {{- with .Values.vaultContainerSpec.readinessProbe }}
     readinessProbe:
       # httpGet:
-      #   scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
+      #   scheme: {{ $.Values.tls.enabled | ternary "HTTPS" "HTTP" }}
       #   path: /v1/sys/health?standbyok=true&perfstandbyok=true&drsecondarycode=299
       #   port: vault
       {{- toYaml . | nindent 6 }}
     {{- end }}
     # startupProbe:
     #   httpGet:
-    #     scheme: {{ .Values.tls.enabled | ternary "HTTPS" "HTTP" }}
+    #     scheme: {{ $.Values.tls.enabled | ternary "HTTPS" "HTTP" }}
     #     path: /v1/sys/init
     #     port: vault
     # {{- with .Values.vaultContainerSpec.startupProbe }}
