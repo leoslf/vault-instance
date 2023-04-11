@@ -3,6 +3,20 @@ entries:
   vault-instance:
   - apiVersion: v1
     appVersion: v1.0.0
+    created: "2023-04-11T14:18:39.081266-04:00"
+    description: a chart for creating a Vault instance via the vault operator
+    digest: 09c1532a5d93dfdeba069b5ac7a073744f587c6cf43926f7eb678c90c120f7b7
+    home: https://github.com/jenkins-x-charts/vault-instance
+    keywords:
+    - vault
+    name: vault-instance
+    sources:
+    - https://github.com/jenkins-x-charts/vault-instance
+    urls:
+    - https://github.com/leoslf/vault-instance/releases/download/v1.0.32/vault-instance-1.0.32.tgz
+    version: 1.0.32
+  - apiVersion: v1
+    appVersion: v1.0.0
     created: "2023-04-11T14:12:49.529797-04:00"
     description: a chart for creating a Vault instance via the vault operator
     digest: 89ec2a537e0071dad88a170c04c0e9c6b041187c19f58e204bb2695922c5f1ee
@@ -57,4 +71,4 @@ entries:
     urls:
     - https://github.com/leoslf/vault-instance/releases/download/v1.0.28/vault-instance-1.0.28.tgz
     version: 1.0.28
-generated: "2023-04-11T14:12:49.529816-04:00"
+generated: "2023-04-11T14:18:39.081284-04:00"
